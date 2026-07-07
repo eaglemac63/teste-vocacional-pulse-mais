@@ -1,11 +1,11 @@
 :root {
-  --primary: #5b3df0;
-  --primary-dark: #4429c9;
-  --bg: #f4f2fb;
+  --primary: #00478f;
+  --primary-dark: #003870;
+  --bg: #f2f5fa;
   --card-bg: #ffffff;
-  --text: #241f36;
-  --muted: #6d6785;
-  --border: #e3ddf5;
+  --text: #1c2430;
+  --muted: #5f6b78;
+  --border: #dbe3ec;
   --a: #f0574d;
   --b: #f0a83d;
   --c: #3dbf7e;
@@ -35,12 +35,11 @@ body {
   gap: 12px;
 }
 
-.brand {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: var(--primary-dark);
+.brand-logo {
+  height: 30px;
+  width: auto;
+  display: block;
 }
-.brand span { color: var(--text); font-weight: 400; }
 
 .tabs { display: flex; gap: 8px; }
 
@@ -124,7 +123,7 @@ form input:focus { outline: 2px solid var(--primary); border-color: transparent;
   color: white;
   width: 100%;
 }
-.btn-primary:disabled { background: #cabfef; cursor: not-allowed; }
+.btn-primary:disabled { background: #b7c4d6; cursor: not-allowed; }
 .btn-primary:not(:disabled):hover { background: var(--primary-dark); }
 
 .btn-secondary {
@@ -176,7 +175,7 @@ form input:focus { outline: 2px solid var(--primary); border-color: transparent;
 .option-row:hover { border-color: var(--primary); }
 .option-row.selected {
   border-color: var(--primary);
-  background: #f2effe;
+  background: #eaf0f8;
 }
 
 .option-letter {

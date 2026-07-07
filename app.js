@@ -161,9 +161,9 @@ function renderChart() {
     datasets: [{
       label: "Pontuação",
       data: [state.scores.a, state.scores.b, state.scores.c, state.scores.d],
-      backgroundColor: "rgba(91, 61, 240, 0.2)",
-      borderColor: "rgba(91, 61, 240, 1)",
-      pointBackgroundColor: "rgba(91, 61, 240, 1)",
+      backgroundColor: "rgba(0, 71, 143, 0.2)",
+      borderColor: "rgba(0, 71, 143, 1)",
+      pointBackgroundColor: "rgba(0, 71, 143, 1)",
       borderWidth: 2
     }]
   };
