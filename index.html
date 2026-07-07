@@ -3,99 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pulse Mais — Teste Vocacional de Profissão</title>
+<title>Pulse Mais — Testes Vocacionais</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <header class="topbar">
   <img src="assets/logo-pulse-mais.png" alt="Pulse Mais" class="brand-logo">
-  <nav class="tabs" id="tabs">
-    <button class="tab active" data-step="cadastro">1. Cadastro</button>
-    <button class="tab" data-step="perguntas" disabled>2. Perguntas</button>
-    <button class="tab" data-step="resultado" disabled>3. Resultado</button>
-  </nav>
 </header>
 
 <main>
+  <section class="hero">
+    <h1>Descubra qual carreira combina com você</h1>
+    <p>Faça um dos nossos testes vocacionais gratuitos e receba um relatório personalizado, com placar, gráfico e sugestões de profissões afins à sua personalidade.</p>
+  </section>
 
-  <!-- ETAPA 1: CADASTRO -->
-  <section id="step-cadastro" class="step active">
-    <div class="card">
-      <h1>Teste Vocacional de Profissão</h1>
-      <p class="subtitle">Descubra as áreas e profissões mais afins à sua personalidade. Leva cerca de 10 minutos.</p>
+  <section class="test-grid">
+    <div class="test-card">
+      <div class="test-badge" style="background:#00478f">P</div>
+      <h2>Teste Vocacional - Profissões</h2>
+      <p>20 perguntas sobre seu jeito de ser e agir, para identificar qual dos 4 perfis de personalidade mais combina com você e quais profissões são mais indicadas.</p>
+      <a class="btn-gradient" href="profissoes/index.html">Começar o teste</a>
+    </div>
 
-      <form id="form-cadastro" novalidate>
-        <label>
-          Nome completo
-          <input type="text" id="input-nome" name="nome" required autocomplete="name">
-        </label>
-        <label>
-          E-mail
-          <input type="email" id="input-email" name="email" required autocomplete="email">
-        </label>
-        <label>
-          WhatsApp
-          <input type="tel" id="input-whatsapp" name="whatsapp" placeholder="(11) 91234-5678" required autocomplete="tel">
-        </label>
-
-        <label class="checkbox-row">
-          <input type="checkbox" id="input-lgpd" required>
-          <span>
-            Autorizo o uso dos meus dados (nome, e-mail e WhatsApp) exclusivamente para
-            personalizar e gerar o meu relatório de resultado deste teste vocacional.
-            Estou ciente de que <strong>nenhum dado é armazenado</strong> em servidores ou
-            bases de dados — as informações são processadas apenas neste navegador, durante
-            esta sessão, em conformidade com a LGPD (Lei nº 13.709/2018).
-          </span>
-        </label>
-
-        <button type="submit" id="btn-start" class="btn-primary" disabled>Começar o teste</button>
-      </form>
+    <div class="test-card">
+      <div class="test-badge" style="background:#0071bd">C</div>
+      <h2>Teste Vocacional - Carreiras</h2>
+      <p>17 perguntas sobre seus valores e interesses, para descobrir o que mais importa para você na escolha da carreira e quais cursos combinam com esse perfil.</p>
+      <a class="btn-gradient" href="carreiras/index.html">Começar o teste</a>
     </div>
   </section>
 
-  <!-- ETAPA 2: PERGUNTAS -->
-  <section id="step-perguntas" class="step">
-    <div class="card wide">
-      <div class="progress-wrap">
-        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-        <span id="progress-label">Pergunta 1 de 20</span>
-      </div>
-
-      <div id="question-container"></div>
-
-      <div class="nav-buttons">
-        <button type="button" id="btn-prev" class="btn-secondary">Anterior</button>
-        <button type="button" id="btn-next" class="btn-primary">Próxima</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ETAPA 3: RESULTADO -->
-  <section id="step-resultado" class="step">
-    <div class="card wide">
-      <h1 id="result-greeting">Seu resultado</h1>
-
-      <div class="result-grid">
-        <div class="result-numbers" id="result-numbers"></div>
-        <div class="result-chart">
-          <canvas id="radar-chart" width="360" height="360"></canvas>
-        </div>
-      </div>
-
-      <div class="result-profile" id="result-profile"></div>
-
-      <button type="button" id="btn-pdf" class="btn-primary">Baixar PDF do resultado</button>
-      <p class="privacy-note">Este relatório é gerado localmente no seu navegador. Nenhum dado foi enviado ou armazenado em nossos servidores.</p>
-    </div>
-  </section>
-
+  <p class="landing-footer">
+    Os testes são gerados e respondidos localmente no seu navegador. Nenhum dado é armazenado em servidores.
+    Seus dados (nome, e-mail e WhatsApp) são usados apenas para personalizar o relatório em PDF da sua sessão.
+  </p>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="data.js"></script>
-<script src="app.js"></script>
 </body>
 </html>

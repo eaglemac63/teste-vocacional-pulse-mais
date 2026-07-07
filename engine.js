@@ -1,15 +1,20 @@
-// Pulse Mais — Teste Vocacional de Profissão
+// Pulse Mais — motor genérico dos testes vocacionais
 // Toda a lógica roda no navegador. Nenhum dado é enviado ou persistido.
+// Espera encontrar um objeto global TEST (definido em cada pasta de teste, em data.js)
 
 const state = {
   user: { nome: "", email: "", whatsapp: "" },
-  answers: QUESTIONS.map(() => null), // letra escolhida (a/b/c/d) em cada pergunta
+  answers: TEST.questions.map(() => null),
   currentQuestion: 0,
   scores: null,
   topLetters: []
 };
 
 let radarChart = null;
+
+document.title = `Pulse Mais — ${TEST.meta.testName}`;
+document.getElementById("test-title").textContent = TEST.meta.testName;
+document.getElementById("test-subtitle").textContent = TEST.meta.subtitle;
 
 // ---------- Navegação entre etapas ----------
 function goToStep(step) {
@@ -70,13 +75,13 @@ const btnNext = document.getElementById("btn-next");
 
 function renderQuestion(index) {
   state.currentQuestion = index;
-  const q = QUESTIONS[index];
+  const q = TEST.questions[index];
   const selected = state.answers[index];
 
-  progressFill.style.width = `${((index + 1) / QUESTIONS.length) * 100}%`;
-  progressLabel.textContent = `Pergunta ${index + 1} de ${QUESTIONS.length}`;
+  progressFill.style.width = `${((index + 1) / TEST.questions.length) * 100}%`;
+  progressLabel.textContent = `Pergunta ${index + 1} de ${TEST.questions.length}`;
 
-  const rows = ["a", "b", "c", "d"].map(letter => `
+  const rows = TEST.letters.map(letter => `
       <button type="button" class="option-row ${selected === letter ? "selected" : ""}" data-letter="${letter}">
         <span class="option-letter">${letter}</span>
         <span class="option-text">${q.options[letter]}</span>
@@ -98,7 +103,7 @@ function renderQuestion(index) {
 
   btnPrev.disabled = index === 0;
   btnNext.disabled = state.answers[index] === null;
-  btnNext.textContent = index === QUESTIONS.length - 1 ? "Ver resultado" : "Próxima";
+  btnNext.textContent = index === TEST.questions.length - 1 ? "Ver resultado" : "Próxima";
 }
 
 btnPrev.addEventListener("click", () => {
@@ -106,7 +111,7 @@ btnPrev.addEventListener("click", () => {
 });
 
 btnNext.addEventListener("click", () => {
-  if (state.currentQuestion < QUESTIONS.length - 1) {
+  if (state.currentQuestion < TEST.questions.length - 1) {
     renderQuestion(state.currentQuestion + 1);
   } else {
     computeResults();
@@ -117,13 +122,14 @@ btnNext.addEventListener("click", () => {
 
 // ---------- Etapa 3: Resultado ----------
 function computeResults() {
-  const totals = { a: 0, b: 0, c: 0, d: 0 };
+  const totals = {};
+  TEST.letters.forEach(letter => { totals[letter] = 0; });
   state.answers.forEach(letter => {
     if (letter) totals[letter] += 1;
   });
   state.scores = totals;
 
-  const max = Math.max(totals.a, totals.b, totals.c, totals.d);
+  const max = Math.max(...Object.values(totals));
   state.topLetters = Object.keys(totals)
     .filter(letter => totals[letter] === max)
     .map(letter => letter.toUpperCase());
@@ -132,20 +138,21 @@ function computeResults() {
 }
 
 function renderResults() {
-  const { a, b, c, d } = state.scores;
-  const maxScale = QUESTIONS.length; // 20
+  const maxScale = TEST.questions.length;
 
   document.getElementById("result-greeting").textContent =
     `${state.user.nome ? "Olá, " + state.user.nome.split(" ")[0] + "! " : ""}Seu resultado`;
 
   const numbersEl = document.getElementById("result-numbers");
-  numbersEl.innerHTML = ["A", "B", "C", "D"].map(letter => {
-    const value = state.scores[letter.toLowerCase()];
+  numbersEl.innerHTML = TEST.letters.map(letter => {
+    const upper = letter.toUpperCase();
+    const value = state.scores[letter];
     const pct = (value / maxScale) * 100;
+    const color = TEST.colors[letter];
     return `
-      <div class="score-line ${letter}">
-        <span class="score-label">Tipo ${letter}</span>
-        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+      <div class="score-line">
+        <span class="score-label" style="color:${color}">${upper}</span>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%;background:${color}"></div></div>
         <span class="score-value">${value}</span>
       </div>`;
   }).join("");
@@ -157,10 +164,10 @@ function renderResults() {
 function renderChart() {
   const ctx = document.getElementById("radar-chart").getContext("2d");
   const data = {
-    labels: ["Tipo A", "Tipo B", "Tipo C", "Tipo D"],
+    labels: TEST.letters.map(l => l.toUpperCase()),
     datasets: [{
       label: "Pontuação",
-      data: [state.scores.a, state.scores.b, state.scores.c, state.scores.d],
+      data: TEST.letters.map(l => state.scores[l]),
       backgroundColor: "rgba(0, 71, 143, 0.2)",
       borderColor: "rgba(0, 71, 143, 1)",
       pointBackgroundColor: "rgba(0, 71, 143, 1)",
@@ -175,7 +182,7 @@ function renderChart() {
       responsive: false,
       animation: false,
       scales: {
-        r: { min: 0, max: QUESTIONS.length, ticks: { stepSize: 5 } }
+        r: { min: 0, max: TEST.questions.length, ticks: { stepSize: Math.ceil(TEST.questions.length / 4) } }
       },
       plugins: { legend: { display: false } }
     }
@@ -187,7 +194,7 @@ function renderProfile() {
   const isTie = state.topLetters.length > 1;
 
   const blocks = state.topLetters.map(letter => {
-    const profile = PROFILES[letter];
+    const profile = TEST.profiles[letter];
     return `
       <h2>${profile.label} — ${profile.title}</h2>
       <p>${profile.text}</p>
@@ -201,6 +208,12 @@ function renderProfile() {
     ${isTie ? "<p><em>Seu resultado combina mais de um perfil, com pontuação empatada.</em></p>" : ""}
     ${blocks}
   `;
+
+  const linkHome = document.getElementById("link-home");
+  const linkOther = document.getElementById("link-other");
+  linkHome.href = TEST.meta.homeHref;
+  linkOther.href = TEST.meta.otherHref;
+  linkOther.textContent = TEST.meta.otherLabel;
 }
 
 // ---------- Geração de PDF ----------
@@ -229,7 +242,7 @@ async function generatePDF() {
   const margin = 48;
   const pageBottom = 780;
 
-  const logoDataUrl = await loadImageAsDataURL("assets/logo-pulse-mais.png");
+  const logoDataUrl = await loadImageAsDataURL("../assets/logo-pulse-mais.png");
   const logoW = 96;
   const logoH = logoW * (123 / 402);
 
@@ -245,7 +258,7 @@ async function generatePDF() {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
   doc.setTextColor(...NAVY);
-  doc.text("Teste Vocacional de Profissão — Resultado", margin, y);
+  doc.text(`${TEST.meta.pdfHeading} — Resultado`, margin, y);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
@@ -264,15 +277,15 @@ async function generatePDF() {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.setTextColor(...NAVY);
-  doc.text("Pontuação por tipo", margin, y);
+  doc.text("Pontuação por perfil", margin, y);
   y += 22;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
   doc.setTextColor(40, 40, 46);
-  ["A", "B", "C", "D"].forEach(letter => {
-    const value = state.scores[letter.toLowerCase()];
-    doc.text(`Tipo ${letter}: ${value} / ${QUESTIONS.length}`, margin, y);
+  TEST.letters.forEach(letter => {
+    const value = state.scores[letter];
+    doc.text(`${letter.toUpperCase()}: ${value} / ${TEST.questions.length}`, margin, y);
     y += 17;
   });
 
@@ -288,7 +301,7 @@ async function generatePDF() {
 
   // Perfil(s)
   state.topLetters.forEach(letter => {
-    const profile = PROFILES[letter];
+    const profile = TEST.profiles[letter];
 
     doc.setFontSize(10.5);
     const textLines = doc.splitTextToSize(profile.text, pageWidth - margin * 2 - 28);
@@ -336,6 +349,6 @@ async function generatePDF() {
   doc.setTextColor(150, 150, 155);
   doc.text("Documento gerado localmente pela Pulse Mais. Nenhum dado foi armazenado em servidores.", margin, 815);
 
-  const fileName = `teste-vocacional-${(state.user.nome || "resultado").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+  const fileName = `${TEST.meta.fileBase}-${(state.user.nome || "resultado").replace(/\s+/g, "-").toLowerCase()}.pdf`;
   doc.save(fileName);
 }
