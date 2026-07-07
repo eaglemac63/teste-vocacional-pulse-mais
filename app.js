@@ -204,53 +204,79 @@ function renderProfile() {
 }
 
 // ---------- Geração de PDF ----------
+const NAVY = [0, 56, 112];
+const SLATE = [95, 99, 110];
+const LIGHT_PANEL = [244, 246, 250];
+const LIGHT_LINE = [222, 227, 235];
+
 document.getElementById("btn-pdf").addEventListener("click", generatePDF);
 
-function generatePDF() {
+function loadImageAsDataURL(url) {
+  return fetch(url)
+    .then(res => res.blob())
+    .then(blob => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    }));
+}
+
+async function generatePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 48;
-  let y = 60;
+  const pageBottom = 780;
 
+  const logoDataUrl = await loadImageAsDataURL("assets/logo-pulse-mais.png");
+  const logoW = 96;
+  const logoH = logoW * (123 / 402);
+
+  function drawTopBar() {
+    doc.setFillColor(...NAVY);
+    doc.rect(0, 0, pageWidth, 8, "F");
+  }
+
+  drawTopBar();
+  doc.addImage(logoDataUrl, "PNG", margin, 28, logoW, logoH);
+
+  let y = 28 + logoH + 26;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.setTextColor(91, 61, 240);
-  doc.text("Pulse Mais", margin, y);
-
-  doc.setFontSize(14);
-  doc.setTextColor(36, 31, 54);
-  y += 26;
+  doc.setFontSize(16);
+  doc.setTextColor(...NAVY);
   doc.text("Teste Vocacional de Profissão — Resultado", margin, y);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.setTextColor(109, 103, 133);
+  doc.setTextColor(...SLATE);
   y += 18;
   const today = new Date().toLocaleDateString("pt-BR");
   doc.text(`Nome: ${state.user.nome}    |    Data: ${today}`, margin, y);
 
-  y += 30;
-  doc.setDrawColor(227, 221, 245);
+  y += 22;
+  doc.setDrawColor(...LIGHT_LINE);
+  doc.setLineWidth(1);
   doc.line(margin, y, pageWidth - margin, y);
-  y += 30;
+  y += 32;
 
   // Placar numérico
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.setTextColor(36, 31, 54);
+  doc.setTextColor(...NAVY);
   doc.text("Pontuação por tipo", margin, y);
-  y += 20;
+  y += 22;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
+  doc.setTextColor(40, 40, 46);
   ["A", "B", "C", "D"].forEach(letter => {
     const value = state.scores[letter.toLowerCase()];
     doc.text(`Tipo ${letter}: ${value} / ${QUESTIONS.length}`, margin, y);
-    y += 16;
+    y += 17;
   });
 
-  y += 16;
+  y += 14;
 
   // Gráfico radar (canvas -> imagem), centralizado abaixo do placar
   const chartCanvas = document.getElementById("radar-chart");
@@ -258,43 +284,57 @@ function generatePDF() {
   const imgSize = 200;
   doc.addImage(chartImg, "PNG", (pageWidth - imgSize) / 2, y, imgSize, imgSize);
 
-  y += imgSize + 30;
+  y += imgSize + 34;
 
   // Perfil(s)
-  const pageBottom = 780;
   state.topLetters.forEach(letter => {
     const profile = PROFILES[letter];
 
     doc.setFontSize(10.5);
-    const textLines = doc.splitTextToSize(profile.text, pageWidth - margin * 2);
-    const careersLines = doc.splitTextToSize(profile.careers.join(", "), pageWidth - margin * 2);
-    const blockHeight = 18 + textLines.length * 13 + 10 + 14 + careersLines.length * 13 + 24;
+    const textLines = doc.splitTextToSize(profile.text, pageWidth - margin * 2 - 28);
+    const careersLines = doc.splitTextToSize(profile.careers.join(", "), pageWidth - margin * 2 - 28);
+    const innerHeight = 24 + textLines.length * 13 + 12 + 14 + careersLines.length * 13;
+    const blockHeight = innerHeight + 32;
 
-    if (y + blockHeight > pageBottom && y > 60) { doc.addPage(); y = 60; }
+    if (y + blockHeight > pageBottom && y > 60) {
+      doc.addPage();
+      drawTopBar();
+      y = 60;
+    }
 
+    // painel de fundo
+    doc.setFillColor(...LIGHT_PANEL);
+    doc.roundedRect(margin - 14, y - 20, pageWidth - margin * 2 + 28, blockHeight, 8, 8, "F");
+
+    const textX = margin;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
-    doc.text(`${profile.label} — ${profile.title}`, margin, y);
-    y += 18;
+    doc.setTextColor(...NAVY);
+    doc.text(`${profile.label} — ${profile.title}`, textX, y);
+    y += 20;
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10.5);
-    doc.text(textLines, margin, y);
-    y += textLines.length * 13 + 10;
+    doc.setTextColor(40, 40, 46);
+    doc.text(textLines, textX, y);
+    y += textLines.length * 13 + 12;
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10.5);
-    doc.text("Carreiras mais apropriadas:", margin, y);
+    doc.setTextColor(...NAVY);
+    doc.text("Carreiras mais apropriadas:", textX, y);
     y += 14;
 
     doc.setFont("helvetica", "normal");
-    doc.text(careersLines, margin, y);
-    y += careersLines.length * 13 + 24;
+    doc.setTextColor(40, 40, 46);
+    doc.text(careersLines, textX, y);
+    y += careersLines.length * 13 + 32;
   });
 
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  doc.text("Documento gerado localmente. Nenhum dado foi armazenado em servidores.", margin, 820);
+  doc.setTextColor(150, 150, 155);
+  doc.text("Documento gerado localmente pela Pulse Mais. Nenhum dado foi armazenado em servidores.", margin, 815);
 
   const fileName = `teste-vocacional-${(state.user.nome || "resultado").replace(/\s+/g, "-").toLowerCase()}.pdf`;
   doc.save(fileName);
