@@ -2,6 +2,7 @@
 // Extraído do documento original (17 perguntas + perfis A/B/C/D/E)
 
 const TEST = {
+  mode: "single",
   letters: ["a", "b", "c", "d", "e"],
   colors: { a: "#f0574d", b: "#f0a83d", c: "#3dbf7e", d: "#4472f0", e: "#9b59b6" },
 
@@ -12,7 +13,8 @@ const TEST = {
     fileBase: "teste-vocacional-carreiras",
     homeHref: "../index.html",
     otherHref: "../profissoes/index.html",
-    otherLabel: "Fazer o Teste de Profissões"
+    otherLabel: "Fazer o Teste de Profissões",
+    instructions: "A escolha da profissão não é uma tarefa fácil, sempre surgem dúvidas na hora de decidir entre quais carreiras escolher. O Teste Vocacional foi elaborado para que você possa descobrir quais carreiras mais combinam com você e com sua personalidade. O teste é composto por 17 questões objetivas, nas quais você deve selecionar uma única opção por pergunta. No final, você pode conferir qual opção obteve mais respostas e o resultado do seu teste profissional. Aproveite esta ótima oportunidade para analisar quais as áreas do conhecimento que mais combinam com a sua personalidade."
   },
 
   questions: [

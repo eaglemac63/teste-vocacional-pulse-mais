@@ -2,9 +2,22 @@
 // Toda a lógica roda no navegador. Nenhum dado é enviado ou persistido.
 // Espera encontrar um objeto global TEST (definido em cada pasta de teste, em data.js)
 
+function emptyAnswer() {
+  if (TEST.mode === "rank") {
+    const obj = {};
+    TEST.letters.forEach(letter => { obj[letter] = null; });
+    return obj;
+  }
+  return null;
+}
+
+function getMaxScale() {
+  return TEST.questions.length * (TEST.mode === "rank" ? 3 : 1);
+}
+
 const state = {
   user: { nome: "", email: "", whatsapp: "" },
-  answers: TEST.questions.map(() => null),
+  answers: TEST.questions.map(() => emptyAnswer()),
   currentQuestion: 0,
   scores: null,
   topLetters: []
@@ -15,6 +28,16 @@ let radarChart = null;
 document.title = `Pulse Mais — ${TEST.meta.testName}`;
 document.getElementById("test-title").textContent = TEST.meta.testName;
 document.getElementById("test-subtitle").textContent = TEST.meta.subtitle;
+
+const instructionsEl = document.getElementById("test-instructions");
+if (TEST.meta.instructions) {
+  const legendHtml = TEST.meta.scoreLegend
+    ? `<ul class="score-legend">${TEST.meta.scoreLegend.map(item => `<li><strong>${item.v}</strong> — ${item.label}</li>`).join("")}</ul>`
+    : "";
+  instructionsEl.innerHTML = `<p>${TEST.meta.instructions}</p>${legendHtml}`;
+} else {
+  instructionsEl.style.display = "none";
+}
 
 // ---------- Navegação entre etapas ----------
 function goToStep(step) {
@@ -76,10 +99,22 @@ const btnNext = document.getElementById("btn-next");
 function renderQuestion(index) {
   state.currentQuestion = index;
   const q = TEST.questions[index];
-  const selected = state.answers[index];
 
   progressFill.style.width = `${((index + 1) / TEST.questions.length) * 100}%`;
   progressLabel.textContent = `Pergunta ${index + 1} de ${TEST.questions.length}`;
+
+  if (TEST.mode === "rank") {
+    renderRankQuestion(index, q);
+  } else {
+    renderSingleQuestion(index, q);
+  }
+
+  btnPrev.disabled = index === 0;
+  btnNext.textContent = index === TEST.questions.length - 1 ? "Ver resultado" : "Próxima";
+}
+
+function renderSingleQuestion(index, q) {
+  const selected = state.answers[index];
 
   const rows = TEST.letters.map(letter => `
       <button type="button" class="option-row ${selected === letter ? "selected" : ""}" data-letter="${letter}">
@@ -101,9 +136,48 @@ function renderQuestion(index) {
     });
   });
 
-  btnPrev.disabled = index === 0;
   btnNext.disabled = state.answers[index] === null;
-  btnNext.textContent = index === TEST.questions.length - 1 ? "Ver resultado" : "Próxima";
+}
+
+function renderRankQuestion(index, q) {
+  const ans = state.answers[index];
+
+  const rows = TEST.letters.map(letter => {
+    const value = ans[letter];
+    const pips = [3, 2, 1, 0].map(v => {
+      const usedByOther = TEST.letters.some(l2 => l2 !== letter && ans[l2] === v);
+      return `<button type="button" class="rank-pip ${value === v ? "selected" : ""}" data-letter="${letter}" data-value="${v}" ${usedByOther ? "disabled" : ""}>${v}</button>`;
+    }).join("");
+
+    return `
+      <div class="rank-row">
+        <span class="option-letter">${letter}</span>
+        <span class="rank-text">${q.options[letter]}</span>
+        <span class="rank-pips">${pips}</span>
+      </div>`;
+  }).join("");
+
+  questionContainer.innerHTML = `
+    <div class="question-title">${q.n}) ${q.text}</div>
+    ${rows}
+    <p class="score-hint">Toque nos números para atribuir a pontuação de cada alternativa.</p>
+  `;
+
+  questionContainer.querySelectorAll(".rank-pip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const letter = btn.dataset.letter;
+      const value = Number(btn.dataset.value);
+      if (ans[letter] === value) {
+        ans[letter] = null;
+      } else {
+        TEST.letters.forEach(l2 => { if (ans[l2] === value) ans[l2] = null; });
+        ans[letter] = value;
+      }
+      renderQuestion(index);
+    });
+  });
+
+  btnNext.disabled = false;
 }
 
 btnPrev.addEventListener("click", () => {
@@ -124,9 +198,16 @@ btnNext.addEventListener("click", () => {
 function computeResults() {
   const totals = {};
   TEST.letters.forEach(letter => { totals[letter] = 0; });
-  state.answers.forEach(letter => {
-    if (letter) totals[letter] += 1;
-  });
+
+  if (TEST.mode === "rank") {
+    state.answers.forEach(ans => {
+      TEST.letters.forEach(letter => { if (ans[letter] != null) totals[letter] += ans[letter]; });
+    });
+  } else {
+    state.answers.forEach(letter => {
+      if (letter) totals[letter] += 1;
+    });
+  }
   state.scores = totals;
 
   const max = Math.max(...Object.values(totals));
@@ -138,7 +219,7 @@ function computeResults() {
 }
 
 function renderResults() {
-  const maxScale = TEST.questions.length;
+  const maxScale = getMaxScale();
 
   document.getElementById("result-greeting").textContent =
     `${state.user.nome ? "Olá, " + state.user.nome.split(" ")[0] + "! " : ""}Seu resultado`;
@@ -182,7 +263,7 @@ function renderChart() {
       responsive: false,
       animation: false,
       scales: {
-        r: { min: 0, max: TEST.questions.length, ticks: { stepSize: Math.ceil(TEST.questions.length / 4) } }
+        r: { min: 0, max: getMaxScale(), ticks: { stepSize: Math.ceil(getMaxScale() / 4) } }
       },
       plugins: { legend: { display: false } }
     }
@@ -283,9 +364,10 @@ async function generatePDF() {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
   doc.setTextColor(40, 40, 46);
+  const maxScale = getMaxScale();
   TEST.letters.forEach(letter => {
     const value = state.scores[letter];
-    doc.text(`${letter.toUpperCase()}: ${value} / ${TEST.questions.length}`, margin, y);
+    doc.text(`${letter.toUpperCase()}: ${value} / ${maxScale}`, margin, y);
     y += 17;
   });
 

@@ -2,6 +2,7 @@
 // Extraído do documento original (20 perguntas + perfis A/B/C/D)
 
 const TEST = {
+  mode: "rank",
   letters: ["a", "b", "c", "d"],
   colors: { a: "#f0574d", b: "#f0a83d", c: "#3dbf7e", d: "#4472f0" },
 
@@ -12,7 +13,14 @@ const TEST = {
     fileBase: "teste-vocacional-profissoes",
     homeHref: "../index.html",
     otherHref: "../carreiras/index.html",
-    otherLabel: "Fazer o Teste de Carreiras"
+    otherLabel: "Fazer o Teste de Carreiras",
+    instructions: "Para saber quais são as áreas e profissões mais afins à sua personalidade, atribua pontos a cada uma das alternativas apresentadas nas vinte perguntas a seguir. Se ficar em dúvida, não responda.",
+    scoreLegend: [
+      { v: 3, label: "para a alternativa com a qual você mais se identifica" },
+      { v: 2, label: "para aquela que tem a ver com você" },
+      { v: 1, label: "para a que tem pouco a ver com você" },
+      { v: 0, label: "para aquela que nada tem a ver com você" }
+    ]
   },
 
   questions: [
